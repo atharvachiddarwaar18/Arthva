@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Spendy - Premium Expense Tracker</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.395.0/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  
+  <!-- App Container (Mobile viewport centered on Desktop) -->
+  <div class="app-viewport">
+    
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- ========================================== -->
+    <!-- SCREEN 1: HOME SCREEN                      -->
+    <!-- ========================================== -->
+    <div id="screen-home" class="app-screen active">
+      <header class="app-header">
+        <div class="brand">
+          <div class="logo-icon">S</div>
+          <div class="brand-text">
+            <h1>Spendy</h1>
+            <p>Finance Command Center</p>
+          </div>
+        </div>
+        <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
+          <i data-lucide="sun"></i>
+        </button>
+      </header>
+
+      <main class="scroll-container">
+        <!-- Module Selector -->
+        <div class="module-cards">
+          <div class="module-card" id="btn-goto-individual">
+            <div class="module-icon ind-icon">
+              <i data-lucide="user"></i>
+            </div>
+            <div class="module-info">
+              <h3>Personal Tracker</h3>
+              <p>Basic individual spending & categories</p>
+            </div>
+            <i class="arrow-icon" data-lucide="chevron-right"></i>
+          </div>
+
+          <div class="module-card highlight" id="btn-goto-trips">
+            <div class="module-icon trip-icon">
+              <i data-lucide="compass"></i>
+            </div>
+            <div class="module-info">
+              <h3>Trip Splitter</h3>
+              <p>Group expenses, analytics & debt resolution</p>
+            </div>
+            <i class="arrow-icon" data-lucide="chevron-right"></i>
+          </div>
+        </div>
+
+        <!-- Personal Quick Summary -->
+        <section class="home-section">
+          <div class="section-header">
+            <h2>Personal Summary</h2>
+          </div>
+          <div class="glass-card personal-summary-card">
+            <div class="summary-label">Total Spent This Month</div>
+            <div class="summary-value" id="home-personal-total">₹0.00</div>
+            <div class="summary-footer">
+              <span class="status-indicator safe"><i data-lucide="trending-down"></i> Within budget</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Trips Section -->
+        <section class="home-section">
+          <div class="section-header">
+            <h2>Active Trips</h2>
+            <button id="btn-open-create-trip" class="text-btn">
+              <i data-lucide="plus"></i> New Trip
+            </button>
+          </div>
+          
+          <div id="trip-list" class="trip-list">
+            <!-- Dynamic active trips will be inserted here -->
+            <div class="empty-state">
+              <i data-lucide="map-pin"></i>
+              <p>No active trips. Start a new trip to track group expenses!</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 2: INDIVIDUAL TRACKER               -->
+    <!-- ========================================== -->
+    <div id="screen-individual" class="app-screen">
+      <header class="app-header">
+        <button id="btn-back-from-ind" class="icon-btn back-btn" aria-label="Go Back">
+          <i data-lucide="arrow-left"></i>
+        </button>
+        <div class="header-title">
+          <h2>Personal Tracker</h2>
+        </div>
+        <div style="width: 40px;"></div> <!-- Spacer for balance -->
+      </header>
+
+      <main class="scroll-container">
+        <!-- Personal Finance Hero Card -->
+        <div class="premium-hero-card">
+          <div class="hero-label">Total Spent</div>
+          <div class="hero-amount" id="ind-total-spent">₹0.00</div>
+          <div class="category-breakdown-bar" id="ind-breakdown-bar">
+            <!-- dynamic progress segments -->
+          </div>
+          <div class="category-legend" id="ind-legend">
+            <!-- legends -->
+          </div>
+        </div>
+
+        <!-- Add Expense Inline Card -->
+        <section class="ind-section">
+          <div class="glass-card add-ind-expense-card">
+            <h3>Add New Expense</h3>
+            <form id="form-add-ind-expense">
+              <div class="input-row">
+                <div class="input-group flex-2">
+                  <label for="ind-amount">Amount (₹)</label>
+                  <input type="number" id="ind-amount" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="input-group flex-3">
+                  <label for="ind-category">Category</label>
+                  <select id="ind-category" required>
+                    <option value="Food">🍔 Food</option>
+                    <option value="Travel">🚗 Travel</option>
+                    <option value="Misc">📦 Misc</option>
+                  </select>
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="ind-desc">Description</label>
+                <input type="text" id="ind-desc" placeholder="What was this for?" required>
+              </div>
+              <button type="submit" class="primary-btn">
+                <i data-lucide="plus-circle"></i> Add Expense
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Personal Expense List -->
+        <section class="ind-section">
+          <div class="section-header">
+            <h2>Expense Log</h2>
+          </div>
+          <div id="ind-expense-list" class="expense-list-container">
+            <!-- dynamic personal expenses -->
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 3: TRIP DASHBOARD                   -->
+    <!-- ========================================== -->
+    <div id="screen-trip-dashboard" class="app-screen">
+      <header class="app-header sticky-header">
+        <button id="btn-back-from-trip" class="icon-btn back-btn" aria-label="Go Back">
+          <i data-lucide="arrow-left"></i>
+        </button>
+        <div class="header-title">
+          <h2 id="trip-header-name">Trip Details</h2>
+          <span id="trip-header-subtitle">Active Trip</span>
+        </div>
+        <button id="btn-trip-settings" class="icon-btn" aria-label="Trip Settings">
+          <i data-lucide="settings"></i>
+        </button>
+      </header>
+
+      <main class="scroll-container">
+        
+        <!-- ================= TRIP HERO DASHBOARD (TOP PRIORITY) ================= -->
+        <div class="trip-hero-dashboard">
+          
+          <!-- Row 1: Budget Progress & Health Card -->
+          <div class="glass-card hero-budget-card">
+            <div class="health-and-budget-header">
+              <div>
+                <span class="sub-label">Group Spend vs Budget</span>
+                <div class="flex-align-baseline">
+                  <h2 id="hero-total-spent">₹0.00</h2>
+                  <span class="budget-limit" id="hero-budget-limit">/ ₹0.00</span>
+                </div>
+              </div>
+              <div id="hero-health-indicator" class="health-badge status-safe">
+                On Track
+              </div>
+            </div>
+            
+            <!-- Radial / Progress Bar Container -->
+            <div class="budget-gauge-container">
+              <div class="linear-progress-wrapper">
+                <div class="progress-bar-background">
+                  <div id="budget-progress-fill" class="progress-bar-fill safe" style="width: 0%"></div>
+                </div>
+                <div class="progress-stats">
+                  <span id="budget-remaining-text">₹0.00 remaining</span>
+                  <span id="budget-percent-text">0%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 2: Charts Panel -->
+          <div class="hero-charts-grid">
+            
+            <!-- Category Distribution Donut -->
+            <div class="glass-card chart-card">
+              <div class="chart-card-header">
+                <h3>Distribution</h3>
+                <span class="chart-sub">Category-wise</span>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="chart-distribution"></canvas>
+              </div>
+            </div>
+
+            <!-- Spending Progression Trend Line -->
+            <div class="glass-card chart-card">
+              <div class="chart-card-header">
+                <h3>Daily Progression</h3>
+                <span class="chart-sub">Cumulative spending</span>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="chart-trend"></canvas>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+
+        <!-- Tab Selector for Trip Dashboard sections -->
+        <div class="trip-tab-selector">
+          <button class="trip-tab-btn active" data-tab="tab-balances">Balances</button>
+          <button class="trip-tab-btn" data-tab="tab-settlements">Settlements</button>
+          <button class="trip-tab-btn" data-tab="tab-feed">Feed & Log</button>
+        </div>
+
+        <!-- ================= TAB CONTENT 1: BALANCES & MEMBERS ================= -->
+        <div id="tab-balances" class="trip-tab-content active">
+          <div class="balance-section">
+            <div class="section-header">
+              <h2>Member Standings</h2>
+            </div>
+            <div id="trip-member-standings" class="member-standings-list">
+              <!-- Dynamically loaded members with progress bars -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= TAB CONTENT 2: SETTLEMENT SYSTEM ================= -->
+        <div id="tab-settlements" class="trip-tab-content">
+          <div class="settlement-section">
+            <div class="section-header">
+              <h2>Simplified Debt Resolutions</h2>
+              <span class="info-tag">Optimized Splits</span>
+            </div>
+            
+            <div class="glass-card settlement-card">
+              <div id="settlement-list" class="settlement-list">
+                <!-- dynamic optimized transactions -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= TAB CONTENT 3: EXPENSE FEED & LOG ================= -->
+        <div id="tab-feed" class="trip-tab-content">
+          <!-- Feed Filter Component -->
+          <div class="feed-filters glass-card">
+            <div class="filter-header">
+              <h3>Filters & Search</h3>
+              <button id="btn-clear-filters" class="text-btn small-btn">Reset</button>
+            </div>
+            <div class="filter-grid">
+              <div class="filter-group">
+                <label for="filter-member">Member</label>
+                <select id="filter-member">
+                  <option value="">All Members</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="filter-category">Category</label>
+                <select id="filter-category">
+                  <option value="">All Categories</option>
+                  <option value="Food">Food</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Stay">Stay</option>
+                  <option value="Activity">Activity</option>
+                  <option value="Misc">Misc</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="filter-date">Date</label>
+                <input type="date" id="filter-date">
+              </div>
+            </div>
+          </div>
+
+          <div class="feed-section">
+            <div class="section-header">
+              <h2>Expense Feed</h2>
+            </div>
+            <div id="trip-expense-feed" class="expense-feed-list">
+              <!-- dynamic expense feed cards -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Safe Bottom Pad for Floating Action Button -->
+        <div style="height: 100px;"></div>
+      </main>
+
+      <!-- Floating Action Button for adding expense -->
+      <button id="fab-add-expense" class="fab-btn" aria-label="Add Expense">
+        <i data-lucide="plus"></i>
+      </button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE-UP MODAL: ADD TRIP EXPENSE          -->
+    <!-- ========================================== -->
+    <div id="modal-add-expense" class="bottom-sheet-overlay">
+      <div class="bottom-sheet-backdrop" id="add-expense-backdrop"></div>
+      <div class="bottom-sheet-content">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2>Add Trip Expense</h2>
+          <button id="btn-close-add-expense" class="icon-btn" aria-label="Close">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <form id="form-add-trip-expense" class="sheet-form">
+          <!-- Amount -->
+          <div class="amount-input-wrapper">
+            <span class="currency-symbol">₹</span>
+            <input type="number" id="trip-expense-amount" placeholder="0.00" step="0.01" required>
+          </div>
+
+          <!-- Description -->
+          <div class="input-group">
+            <label for="trip-expense-desc">For what?</label>
+            <input type="text" id="trip-expense-desc" placeholder="e.g. Seafood Dinner, Gas, Airbnb" required>
+          </div>
+
+          <!-- Category -->
+          <div class="input-group">
+            <label>Category</label>
+            <div class="category-chips">
+              <label class="chip-label">
+                <input type="radio" name="trip-expense-category" value="Food" checked>
+                <span class="chip-text">🍔 Food</span>
+              </label>
+              <label class="chip-label">
+                <input type="radio" name="trip-expense-category" value="Travel">
+                <span class="chip-text">🚗 Travel</span>
+              </label>
+              <label class="chip-label">
+                <input type="radio" name="trip-expense-category" value="Stay">
+                <span class="chip-text">🏠 Stay</span>
+              </label>
+              <label class="chip-label">
+                <input type="radio" name="trip-expense-category" value="Activity">
+                <span class="chip-text">🎟️ Activity</span>
+              </label>
+              <label class="chip-label">
+                <input type="radio" name="trip-expense-category" value="Misc">
+                <span class="chip-text">📦 Misc</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Paid By -->
+          <div class="input-group">
+            <label for="trip-expense-payer">Paid By</label>
+            <select id="trip-expense-payer" required>
+              <!-- filled dynamically -->
+            </select>
+          </div>
+
+          <!-- Split Type -->
+          <div class="input-group">
+            <label>Split Type</label>
+            <div class="toggle-tabs">
+              <label class="toggle-tab-option">
+                <input type="radio" name="split-type" value="equal" checked>
+                <span>Equally</span>
+              </label>
+              <label class="toggle-tab-option">
+                <input type="radio" name="split-type" value="custom">
+                <span>Custom Shares</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Split Members Selection -->
+          <div class="input-group">
+            <label>Split Between</label>
+            <div id="split-members-list" class="split-members-check-list">
+              <!-- filled dynamically -->
+            </div>
+          </div>
+
+          <!-- Custom Split Sub-form -->
+          <div id="custom-split-container" class="custom-split-sub-form hidden">
+            <label>Specify amounts for each selected member (Total must equal <span id="custom-split-total-label">₹0.00</span>):</label>
+            <div id="custom-split-inputs" class="custom-split-inputs-list">
+              <!-- dynamically added inputs -->
+            </div>
+            <div class="split-validation-msg" id="custom-split-error">
+              Sum matches target amount!
+            </div>
+          </div>
+
+          <!-- Extra metadata (GPS & Date) -->
+          <div class="metadata-controls">
+            <div class="meta-item">
+              <i data-lucide="map-pin"></i>
+              <span id="expense-gps-status">Fetching location...</span>
+              <input type="hidden" id="expense-gps-value">
+            </div>
+            <div class="meta-item">
+              <i data-lucide="calendar"></i>
+              <input type="date" id="expense-date-input">
+            </div>
+          </div>
+
+          <button type="submit" class="primary-btn submit-expense-btn">
+            Save Expense
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- OVERLAY MODAL: CREATE TRIP                 -->
+    <!-- ========================================== -->
+    <div id="modal-create-trip" class="full-modal-overlay">
+      <div class="full-modal-content">
+        <header class="app-header">
+          <button id="btn-close-create-trip" class="icon-btn" aria-label="Close">
+            <i data-lucide="x"></i>
+          </button>
+          <div class="header-title">
+            <h2>Create New Trip</h2>
+          </div>
+          <div style="width: 40px;"></div>
+        </header>
+
+        <main class="modal-body scroll-container">
+          <form id="form-create-trip" class="modal-form">
+            <div class="input-group">
+              <label for="new-trip-name">Trip Name</label>
+              <input type="text" id="new-trip-name" placeholder="e.g. Goa Vacation, Europe 2026" required>
+            </div>
+
+            <div class="input-group">
+              <label for="new-trip-budget">Trip Budget (₹)</label>
+              <input type="number" id="new-trip-budget" placeholder="e.g. 50000" min="0" step="100">
+            </div>
+
+            <div class="input-group">
+              <label>Add Trip Members</label>
+              <div class="member-input-row">
+                <input type="text" id="new-member-name" placeholder="Member Name">
+                <button type="button" id="btn-add-member-input" class="secondary-btn square-btn">
+                  <i data-lucide="plus"></i>
+                </button>
+              </div>
+              <div id="added-members-chips" class="members-chips-container">
+                <!-- chips for added members -->
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="primary-btn large-btn">
+                Launch Trip
+              </button>
+            </div>
+          </form>
+        </main>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- OVERLAY MODAL: TRIP SETTINGS / EDIT       -->
+    <!-- ========================================== -->
+    <div id="modal-trip-settings" class="full-modal-overlay">
+      <div class="full-modal-content">
+        <header class="app-header">
+          <button id="btn-close-trip-settings" class="icon-btn" aria-label="Close">
+            <i data-lucide="x"></i>
+          </button>
+          <div class="header-title">
+            <h2>Trip Settings</h2>
+          </div>
+          <div style="width: 40px;"></div>
+        </header>
+
+        <main class="modal-body scroll-container">
+          <form id="form-trip-settings" class="modal-form">
+            <div class="input-group">
+              <label for="settings-trip-name">Trip Name</label>
+              <input type="text" id="settings-trip-name" required>
+            </div>
+
+            <div class="input-group">
+              <label for="settings-trip-budget">Trip Budget (₹)</label>
+              <input type="number" id="settings-trip-budget" min="0" step="100">
+            </div>
+
+            <div class="input-group">
+              <label>Current Members (Name-based)</label>
+              <div id="settings-members-list" class="settings-members-list">
+                <!-- Member details list -->
+              </div>
+              <div class="member-input-row margin-top-sm">
+                <input type="text" id="settings-new-member" placeholder="Add Member to Trip">
+                <button type="button" id="btn-settings-add-member" class="secondary-btn square-btn">
+                  <i data-lucide="plus"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="primary-btn large-btn">Save Changes</button>
+              <button type="button" id="btn-delete-trip" class="danger-btn large-btn margin-top-sm">
+                <i data-lucide="trash-2"></i> Delete Trip
+              </button>
+            </div>
+          </form>
+        </main>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="db.js"></script>
+  <script src="engine.js"></script>
+  <script src="charts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
